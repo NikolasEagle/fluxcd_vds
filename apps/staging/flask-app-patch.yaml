@@ -1,0 +1,9 @@
+apiVersion: helm.toolkit.fluxcd.io/v2beta1
+kind: HelmRelease
+metadata:
+  name: flask-app-helm-release
+spec:
+  valuesFrom:
+    - kind: ConfigMap
+      name: flask-app-config
+      valuesKey: values.yaml
