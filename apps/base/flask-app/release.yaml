@@ -1,0 +1,19 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: flask-app-helm-release
+  namespace: default
+spec:
+  interval: 5m
+  chart:
+    spec:
+      chart: flask-app
+      version: ">=0.0.1"
+      sourceRef:
+        kind: HelmRepository
+        name: flask-app-helm-repo
+      interval: 1m
+  valuesFrom:
+    - kind: ConfigMap
+      name: flask-app-config
+      valuesKey: values.yaml
