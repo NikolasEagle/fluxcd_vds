@@ -1,0 +1,10 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: vless
+  namespace: default
+spec:
+  valuesFrom:
+    - kind: ConfigMap
+      name: vless-config
+      valuesKey: values.yaml
