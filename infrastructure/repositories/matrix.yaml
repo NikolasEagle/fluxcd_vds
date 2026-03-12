@@ -5,4 +5,5 @@ metadata:
   namespace: flux-system
 spec:
   interval: 10m
+  type: oci
   url: oci://ghcr.io/element-hq/ess-helm/matrix-stack
