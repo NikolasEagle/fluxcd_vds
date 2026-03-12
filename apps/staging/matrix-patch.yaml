@@ -1,0 +1,10 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: matrix-helm-release
+  namespace: default
+spec:
+  valuesFrom:
+    - kind: ConfigMap
+      name: matrix-config
+      valuesKey: values.yaml
