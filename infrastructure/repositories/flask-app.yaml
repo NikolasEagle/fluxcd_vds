@@ -1,8 +1,7 @@
 apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
-  name: flask-app-repo
-  namespace: flux-system
+  name: flask-app-helm-repo
 spec:
   interval: 1h
   url: https://gitlab.com/api/v4/projects/79784810/packages/helm/stable
