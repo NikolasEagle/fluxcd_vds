@@ -11,6 +11,7 @@ spec:
       sourceRef:
         kind: HelmRepository
         name: flask-app-helm-repo
+        namespace: flux-system
       interval: 1m
   valuesFrom:
     - kind: ConfigMap
