@@ -3,6 +3,8 @@ kind: Kustomization
 resources:
   - ../base/flask-app
   - ../base/matrix
+  - ../base/vless
 patchesStrategicMerge:
   - flask-app-patch.yaml
   - matrix-patch.yaml
+  - vless-patch.yaml
