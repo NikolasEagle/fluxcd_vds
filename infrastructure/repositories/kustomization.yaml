@@ -3,3 +3,4 @@ kind: Kustomization
 resources:
   - flask-app.yaml
   - matrix.yaml
+  - vless.yaml
