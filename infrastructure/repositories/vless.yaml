@@ -1,0 +1,8 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: vless-helm-repo
+  namespace: flux-system
+spec:
+  interval: 10m
+  url: https://gitlab.com/api/v4/projects/80206723/packages/helm/stable
