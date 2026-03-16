@@ -5,8 +5,10 @@ resources:
   - ../base/matrix
   - ../base/vless
   - ../base/moviecat
+  - ../base/mousebook
 patchesStrategicMerge:
   - flask-app-patch.yaml
   - matrix-patch.yaml
   - vless-patch.yaml
   - moviecat-patch.yaml
+  - mousebook-patch.yaml
