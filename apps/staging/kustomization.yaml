@@ -6,9 +6,11 @@ resources:
   - ../base/vless
   - ../base/moviecat
   - ../base/mousebook
+  - ../base/mailu
 patchesStrategicMerge:
   - flask-app-patch.yaml
   - matrix-patch.yaml
   - vless-patch.yaml
   - moviecat-patch.yaml
   - mousebook-patch.yaml
+  - mailu-patch.yaml
