@@ -7,3 +7,4 @@ resources:
   - vless.yaml
   - moviecat.yaml
   - mousebook.yaml
+  - mailu.yaml
