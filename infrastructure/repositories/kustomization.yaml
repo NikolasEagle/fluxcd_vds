@@ -5,3 +5,4 @@ resources:
   - flask-app.yaml
   - matrix.yaml
   - vless.yaml
+  - moviecat.yaml
