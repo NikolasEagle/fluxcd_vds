@@ -6,3 +6,4 @@ resources:
   - matrix.yaml
   - vless.yaml
   - moviecat.yaml
+  - mousebook.yaml

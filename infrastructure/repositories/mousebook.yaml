@@ -1,0 +1,8 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: mousebook-helm-repo
+  namespace: flux-system
+spec:
+  interval: 10m
+  url: https://gitlab.com/api/v4/projects/80313469/packages/helm/stable
