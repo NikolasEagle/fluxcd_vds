@@ -4,7 +4,7 @@ metadata:
   name: mailu
   namespace: default
 spec:
-  suspend: true
+  suspend: false
   interval: 5m
   chart:
     spec:
