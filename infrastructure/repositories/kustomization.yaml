@@ -8,3 +8,4 @@ resources:
   - moviecat.yaml
   - mousebook.yaml
   - mailu.yaml
+  - prometheus-community.yaml
