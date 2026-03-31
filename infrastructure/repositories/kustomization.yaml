@@ -9,3 +9,4 @@ resources:
   - mousebook.yaml
   - mailu.yaml
   - prometheus-community.yaml
+  - grafana.yaml
