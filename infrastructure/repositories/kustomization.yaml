@@ -10,3 +10,4 @@ resources:
   - mailu.yaml
   - prometheus-community.yaml
   - grafana.yaml
+  - cat-proxy.yaml
