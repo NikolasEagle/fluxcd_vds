@@ -14,7 +14,10 @@ spec:
         name: cat-proxy-helm-repo
         namespace: flux-system
       interval: 1m
-  valuesFrom:
-    - kind: ConfigMap
-      name: cat-proxy-config
-      valuesKey: values.yaml
+  values:
+    http:
+      enabled: true
+    socks5:
+      enabled: false
+    dns:
+      enabled: false
