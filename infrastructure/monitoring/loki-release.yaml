@@ -82,7 +82,7 @@ spec:
         enableStatefulSetRecreationForSizeChange: false
         enabled: true
         accessModes:
-          - ReadWriteMany
+          - ReadWriteOnce
         size: 20Gi
 
     write:
