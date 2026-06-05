@@ -11,5 +11,4 @@ patchesStrategicMerge:
   - flask-app-patch.yaml
   - matrix-patch.yaml
   - vless-patch.yaml
-  - mousebook-patch.yaml
   - mailu-patch.yaml

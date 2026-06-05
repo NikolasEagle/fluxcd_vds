@@ -14,7 +14,69 @@ spec:
         name: mousebook-helm-repo
         namespace: flux-system
       interval: 1m
-  valuesFrom:
-    - kind: ConfigMap
-      name: mousebook-config
-      valuesKey: values.yaml
+  values:
+    imagePullSecrets: []
+
+    replicaCount: 1
+
+    ingress:
+      enabled: true
+      className: "traefik"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        traefik.ingress.kubernetes.io/request-body-size: "0"
+      tls:
+        - hosts:
+          - mousebook.eagle.com.ru
+          secretName: mousebook-tls
+      hosts:
+      - host: mousebook.eagle.com.ru
+        paths:
+        - path: /
+          pathType: Prefix
+
+    frontend:
+      enabled: true
+      type: ClusterIP
+      protocol: TCP
+      port: 3001
+      targetPort: 3001
+      volumeMounts: []
+      resources: {}
+
+    auth:
+      volumeMounts: []
+      resources: {}
+
+    api:
+      volumeMounts: []
+      resources: {}
+
+    postgres:
+      volumeMounts:
+        - name: mousebook-pg-volume
+          mountPath: /var/lib/postgresql/data
+      resources: {}
+
+    redis:
+      volumeMounts:
+        - name: mousebook-redis-volume
+          mountPath: /data
+      resources: {}
+
+    secretRef: "mousebook-secret"
+
+    volumes:
+      - name: mousebook-pg-volume
+        persistentVolumeClaim:
+          claimName: mousebook-pg-claim
+      - name: mousebook-redis-volume
+        persistentVolumeClaim:
+          claimName: mousebook-redis-claim
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
