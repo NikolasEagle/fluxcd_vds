@@ -15,7 +15,242 @@ spec:
         name: prometheus-community-helm-repo
         namespace: flux-system
       interval: 1m
-  valuesFrom:
-    - kind: ConfigMap
-      name: alertmanager-config
-      valuesKey: values.yaml
+  values:
+    persistence:
+      enabled: true
+      accessModes:
+        - ReadWriteMany
+      size: 2Gi
+
+    extraSecretMounts:
+      - name: smtp-password
+        secretName: monitoring-secret
+        mountPath: /etc/secrets
+        readOnly: true
+
+    config:
+      enabled: true
+      global:
+        smtp_smarthost: "mail.eagle.com.ru:465"
+        smtp_from: "alertmanager@eagle.com.ru"
+        smtp_auth_username: "alertmanager@eagle.com.ru"
+        smtp_auth_password_file: /etc/secrets/smtp-password
+        smtp_require_tls: true
+        resolve_timeout: 5m
+
+      route:
+        group_by: ["alertname", "cluster", "namespace"]
+        group_wait: 30s
+        group_interval: 5m
+        repeat_interval: 1h
+        receiver: "email-alerts-default"
+
+        routes:
+          - receiver: "email-alerts-critical"
+            matchers:
+              - severity = "critical"
+            group_by: ["alertname", "cluster", "namespace"]
+            group_wait: 10s
+            repeat_interval: 10m
+
+          - receiver: "email-alerts-warning"
+            matchers:
+              - severity = "warning"
+            group_by: ["alertname", "cluster", "namespace"]
+            group_wait: 30s
+            repeat_interval: 30m
+
+          - receiver: "email-alerts-info"
+            matchers:
+              - severity = "info"
+            continue: true
+
+      receivers:
+        - name: "email-alerts-default"
+          email_configs:
+            - to: "eagle.dev.stack@gmail.com"
+              send_resolved: true
+              headers:
+                subject: "[Alert] {{ .GroupLabels.alertname }}"
+              html: |-
+                <h2>Alert: {{ .GroupLabels.alertname }}</h2>
+                <p><strong>Status:</strong> {{ .Status }}</p>
+                <p><strong>Description:</strong> {{ .CommonAnnotations.description }}</p>
+                <hr>
+                <p><strong>Number of alerts:</strong> {{ len .Alerts }}</p>
+                {{ range .Alerts }}
+                <p><strong>Labels:</strong><br>
+                {{ range $key, $value := .Labels }}
+                  {{ $key }}: {{ $value }}<br>
+                {{ end }}
+                </p>
+                <p><strong>Annotations:</strong><br>
+                {{ range $key, $value := .Annotations }}
+                  {{ $key }}: {{ $value }}<br>
+                {{ end }}
+                </p>
+                <hr>
+                {{ end }}
+
+        - name: "email-alerts-critical"
+          email_configs:
+            - to: "eagle.dev.stack@gmail.com"
+              send_resolved: true
+              headers:
+                subject: "🚨🚨🚨 CRITICAL: {{ .GroupLabels.alertname }}"
+              html: |-
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .critical { background-color: #ff4444; color: white; padding: 10px; }
+                        .details { margin: 20px 0; padding: 10px; background-color: #ffeeee; border-left: 4px solid #ff4444; }
+                        .label { font-weight: bold; color: #ff4444; }
+                    </style>
+                </head>
+                <body>
+                    <div class="critical">
+                        <h1>🔴 CRITICAL ALERT 🔴</h1>
+                    </div>
+                    
+                    <div class="details">
+                        <p><span class="label">Alert:</span> {{ .GroupLabels.alertname }}</p>
+                        <p><span class="label">Status:</span> <strong>{{ .Status }}</strong></p>
+                        <p><span class="label">Severity:</span> <strong style="color: #ff4444;">CRITICAL</strong></p>
+                        <p><span class="label">Started:</span> {{ (index .Alerts 0).StartsAt }}</p>
+                        {{ if eq .Status "firing" }}
+                        <p><span class="label">🔥 ACTION REQUIRED IMMEDIATELY 🔥</span></p>
+                        {{ end }}
+                    </div>
+                    
+                    <div class="details">
+                        <h3>Description:</h3>
+                        <p>{{ .CommonAnnotations.description }}</p>
+                        <h3>Summary:</h3>
+                        <p>{{ .CommonAnnotations.summary }}</p>
+                    </div>
+                    
+                    <h3>Affected Alerts ({{ len .Alerts }}):</h3>
+                    {{ range $idx, $alert := .Alerts }}
+                    <div class="details">
+                        <p><strong>Alert #{{ $idx }}</strong></p>
+                        <p><strong>Labels:</strong><br>
+                        {{ range $key, $value := $alert.Labels }}
+                          {{ $key }}: {{ $value }}<br>
+                        {{ end }}
+                        </p>
+                        <p><strong>Annotations:</strong><br>
+                        {{ range $key, $value := $alert.Annotations }}
+                          {{ $key }}: {{ $value }}<br>
+                        {{ end }}
+                        </p>
+                    </div>
+                    {{ end }}
+                    
+                    <hr>
+                    <small>This is an automated critical alert from Prometheus AlertManager</small>
+                </body>
+                </html>
+
+        - name: "email-alerts-warning"
+          email_configs:
+            - to: "eagle.dev.stack@gmail.com"
+              send_resolved: true
+              headers:
+                subject: "⚠️ WARNING: {{ .GroupLabels.alertname }}"
+              html: |-
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .warning { background-color: #ffaa00; color: white; padding: 10px; }
+                        .details { margin: 20px 0; padding: 10px; background-color: #fff5e0; border-left: 4px solid #ffaa00; }
+                        .label { font-weight: bold; color: #ffaa00; }
+                    </style>
+                </head>
+                <body>
+                    <div class="warning">
+                        <h2>⚠️ WARNING ALERT ⚠️</h2>
+                    </div>
+                    
+                    <div class="details">
+                        <p><span class="label">Alert:</span> {{ .GroupLabels.alertname }}</p>
+                        <p><span class="label">Status:</span> {{ .Status }}</p>
+                        <p><span class="label">Severity:</span> <strong>WARNING</strong></p>
+                        <p><span class="label">Started:</span> {{ (index .Alerts 0).StartsAt }}</p>
+                    </div>
+                    
+                    <div class="details">
+                        <h3>Description:</h3>
+                        <p>{{ .CommonAnnotations.description }}</p>
+                        <h3>Summary:</h3>
+                        <p>{{ .CommonAnnotations.summary }}</p>
+                    </div>
+                    
+                    <h3>Alert Details ({{ len .Alerts }}):</h3>
+                    {{ range $idx, $alert := .Alerts }}
+                    <div class="details">
+                        <p><strong>Alert #{{ $idx }}</strong></p>
+                        <p><strong>Labels:</strong><br>
+                        {{ range $key, $value := $alert.Labels }}
+                          {{ $key }}: {{ $value }}<br>
+                        {{ end }}
+                        </p>
+                        <p><strong>Message:</strong><br>
+                        {{ range $key, $value := $alert.Annotations }}
+                          {{ $key }}: {{ $value }}<br>
+                        {{ end }}
+                        </p>
+                    </div>
+                    {{ end }}
+                    
+                    <hr>
+                    <small>Please investigate this warning when possible</small>
+                </body>
+                </html>
+
+        - name: "email-alerts-info"
+          email_configs:
+            - to: "eagle.dev.stack@gmail.com"
+              send_resolved: true
+              headers:
+                subject: "ℹ️ INFO: {{ .GroupLabels.alertname }}"
+              html: |-
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { font-family: Arial, sans-serif; }
+                        .info { background-color: #4CAF50; color: white; padding: 10px; }
+                        .details { margin: 20px 0; padding: 10px; background-color: #e8f5e9; border-left: 4px solid #4CAF50; }
+                    </style>
+                </head>
+                <body>
+                    <div class="info">
+                        <h2>ℹ️ INFORMATIONAL ALERT ℹ️</h2>
+                    </div>
+                    
+                    <div class="details">
+                        <p><strong>Alert:</strong> {{ .GroupLabels.alertname }}</p>
+                        <p><strong>Status:</strong> {{ .Status }}</p>
+                        <p><strong>Time:</strong> {{ .StartsAt }}</p>
+                        <p><strong>Message:</strong> {{ .CommonAnnotations.description }}</p>
+                    </div>
+                    
+                    {{ if .Alerts }}
+                    <h3>Additional details:</h3>
+                    {{ range $alert := .Alerts }}
+                    <div class="details">
+                        {{ range $key, $value := $alert.Annotations }}
+                        <p><strong>{{ $key }}:</strong> {{ $value }}</p>
+                        {{ end }}
+                    </div>
+                    {{ end }}
+                    {{ end }}
+                    
+                    <hr>
+                    <small>No action required - information only</small>
+                </body>
+                </html>
