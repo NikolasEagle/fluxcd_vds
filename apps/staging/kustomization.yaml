@@ -7,5 +7,3 @@ resources:
   - ../base/moviecat
   - ../base/mousebook
   - ../base/mailu
-patchesStrategicMerge:
-  - vless-patch.yaml

@@ -14,7 +14,56 @@ spec:
         name: vless-helm-repo
         namespace: flux-system
       interval: 1m
-  valuesFrom:
-    - kind: ConfigMap
-      name: vless-config
-      valuesKey: values.yaml
+  values:
+    replicaCount: 1
+
+    web:
+      enabled: true
+      type: ClusterIP
+      portName: vless-web
+      protocol: TCP
+      port: 40253
+      targetPort: 40253
+      ingress:
+        enabled: true
+        className: "traefik"
+        annotations:
+          cert-manager.io/cluster-issuer: letsencrypt-prod
+          traefik.ingress.kubernetes.io/router.entrypoints: websecure
+          traefik.ingress.kubernetes.io/request-body-size: "0"
+        tls:
+          - hosts:
+              - mozart.eagle.com.ru
+            secretName: vless-tls
+        hosts:
+          - host: mozart.eagle.com.ru
+            paths:
+              - path: /
+                pathType: Prefix
+
+    vpn:
+      enabled: true
+      type: LoadBalancer
+      portName: vless-vpn
+      protocol: TCP
+      port: 53709
+      targetPort: 53709
+
+    proxy:
+      enabled: true
+      type: LoadBalancer
+      portName: vless-proxy
+      protocol: TCP
+      port: 53710
+      targetPort: 53710
+
+    secretRef: "vless-secret"
+
+    volumeMounts:
+      - name: vless-db-volume
+        mountPath: /etc/x-ui
+
+    volumes:
+      - name: vless-db-volume
+        persistentVolumeClaim:
+          claimName: vless-db-claim
