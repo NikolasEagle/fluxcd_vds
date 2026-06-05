@@ -5,3 +5,4 @@ resources:
   - prometheus-release.yaml
   - alertmanager-release.yaml
   - loki-release.yaml
+  - promtail-release.yaml
