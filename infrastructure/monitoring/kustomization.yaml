@@ -4,3 +4,4 @@ resources:
   - grafana-release.yaml
   - prometheus-release.yaml
   - alertmanager-release.yaml
+  - loki-release.yaml
