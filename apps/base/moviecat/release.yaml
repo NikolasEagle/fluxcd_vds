@@ -14,7 +14,65 @@ spec:
         name: moviecat-helm-repo
         namespace: flux-system
       interval: 1m
-  valuesFrom:
-    - kind: ConfigMap
-      name: moviecat-config
-      valuesKey: values.yaml
+  values:
+    imagePullSecrets: []
+
+    replicaCount: 1
+
+    ingress:
+      enabled: true
+      className: "traefik"
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        traefik.ingress.kubernetes.io/request-body-size: "0"
+      tls:
+        - hosts:
+            - moviecat.eagle.com.ru
+          secretName: moviecat-tls
+      hosts:
+        - host: moviecat.eagle.com.ru
+          paths:
+            - path: /
+              pathType: Prefix
+
+    frontend:
+      enabled: true
+      type: ClusterIP
+      protocol: TCP
+      port: 3000
+      targetPort: 3000
+      volumeMounts: []
+      resources: {}
+
+    backend:
+      volumeMounts: []
+      resources: {}
+
+    postgres:
+      volumeMounts:
+        - name: moviecat-pg-volume
+          mountPath: /var/lib/postgresql/data
+      resources: {}
+
+    redis:
+      volumeMounts:
+        - name: moviecat-redis-volume
+          mountPath: /data
+      resources: {}
+
+    secretRef: "moviecat-secret"
+
+    volumes:
+      - name: moviecat-pg-volume
+        persistentVolumeClaim:
+          claimName: moviecat-pg-claim
+      - name: moviecat-redis-volume
+        persistentVolumeClaim:
+          claimName: moviecat-redis-claim
+
+    nodeSelector: {}
+
+    tolerations: []
+
+    affinity: {}
