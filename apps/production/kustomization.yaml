@@ -8,5 +8,4 @@ resources:
   - ../base/mousebook
   - ../base/mailu
 patchesStrategicMerge:
-  - matrix-patch.yaml
   - vless-patch.yaml

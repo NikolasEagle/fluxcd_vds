@@ -14,7 +14,114 @@ spec:
         name: matrix-helm-repo
         namespace: flux-system
       interval: 1m
-  valuesFrom:
-    - kind: ConfigMap
-      name: matrix-config
-      valuesKey: values.yaml
+  values:
+    matrixTools:
+      image:
+        registry: ghcr.io
+        repository: element-hq/ess-helm/matrix-tools
+        tag: "0.7.1"
+        pullSecrets: []
+
+    certManager:
+      clusterIssuer: letsencrypt-prod
+
+    serverName: matrix.eagle.com.ru
+
+    ingress:
+      className: "traefik"
+      tlsEnabled: true
+
+    clusterDomain: "cluster.local"
+
+    matrixRTC:
+      enabled: true
+      image:
+        registry: ghcr.io
+        repository: element-hq/lk-jwt-service
+        tag: "0.3.0"
+        pullSecrets: []
+      ingress:
+        host: mrtc.eagle.com.ru
+        annotations: {}
+        className: "traefik"
+        tlsEnabled: true
+
+    elementAdmin:
+      enabled: true
+      replicas: 1
+      image:
+        registry: oci.element.io
+        repository: element-admin
+        tag: "0.1.10"
+        pullSecrets: []
+      ingress:
+        host: admin.element.eagle.com.ru
+        annotations: {}
+        className: "traefik"
+        tlsEnabled: true
+
+    elementWeb:
+      enabled: true
+      replicas: 1
+      image:
+        registry: ghcr.io
+        repository: element-hq/element-web
+        tag: "v1.12.8"
+      ingress:
+        host: element.eagle.com.ru
+        annotations:
+          traefik.ingress.kubernetes.io/proxy-body-size: "0"
+        className: "traefik"
+        tlsEnabled: true
+
+    matrixAuthenticationService:
+      enabled: true
+      image:
+        registry: ghcr.io
+        repository: element-hq/matrix-authentication-service
+        tag: "1.9.0"
+      replicas: 1
+      ingress:
+        host: mas.eagle.com.ru
+        annotations: {}
+        className: "traefik"
+        tlsEnabled: true
+
+    postgres:
+      enabled: true
+      storage:
+        existingClaim: "matrix-postgres-data"
+
+    synapse:
+      enabled: true
+      media:
+        storage:
+          existingClaim: "matrix-media-claim"
+          resourcePolicy: keep
+        maxUploadSize: 100M
+      image:
+        registry: oci.element.io
+        repository: synapse
+        tag: "v1.145.0-ess.1"
+      ingress:
+        host: synapse.eagle.com.ru
+        annotations:
+          traefik.ingress.kubernetes.io/proxy-body-size: "0"
+        className: "traefik"
+        tlsEnabled: true
+      extraEnv:
+        - name: HTTP_PROXY
+          value: "http://cat-proxy-http-service.default.svc.cluster.local:8118"
+        - name: HTTPS_PROXY
+          value: "http://cat-proxy-http-service.default.svc.cluster.local:8118"
+        - name: http_proxy
+          value: "http://cat-proxy-http-service.default.svc.cluster.local:8118"
+        - name: https_proxy
+          value: "http://cat-proxy-http-service.default.svc.cluster.local:8118"
+        - name: no_proxy
+          value: "localhost,127.0.0.1,.local,.svc,.cluster.local"
+
+    wellKnownDelegation:
+      enabled: true
+      ingress:
+        tlsEnabled: true
