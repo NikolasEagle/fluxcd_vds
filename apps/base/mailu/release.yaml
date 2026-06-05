@@ -15,7 +15,199 @@ spec:
         name: mailu-helm-repo
         namespace: flux-system
       interval: 1m
-  valuesFrom:
-    - kind: ConfigMap
-      name: mailu-config
-      valuesKey: values.yaml
+  values:
+    global:
+      database:
+        roundcube:
+          database: roundcube
+          username: roundcube
+          password: ""
+          existingSecret: "mail-secret"
+          existingSecretPasswordKey: "roundcube-password"
+
+    hostnames:
+      - mail.eagle.com.ru
+
+    domain: eagle.com.ru
+
+    existingSecret: "mail-secret"
+
+    initialAccount:
+      enabled: true
+      username: "admin"
+      domain: "eagle.com.ru"
+      password: ""
+      existingSecret: "mail-secret"
+      existingSecretPasswordKey: "admin-password"
+      mode: "ifmissing"
+
+    postmaster: admin
+
+    recipientDelimiter: "+"
+
+    dmarc:
+      rua: "admin"
+      ruf: "admin"
+
+    limits:
+      messageSizeLimitInMegabytes: 50
+      authRatelimit:
+        ip: 60/hour
+        ipv4Mask: 24
+        ipv6Mask: 56
+        user: 100/day
+        exemptionLength: 86400
+        exemption: ""
+      messageRatelimit:
+        value: 200/day
+        exemption: ""
+
+    clusterDomain: "cluster.local"
+
+    customization:
+      siteName: "Handel"
+      website: "https://mail.eagle.com.ru"
+      logoUrl: ""
+      logoBackground: ""
+
+    welcomeMessage:
+      enabled: true
+      subject: "Добро пожаловать в Handel"
+      body: "Добро пожаловать в Handel, новый почтовый сервис."
+
+    mariadb:
+      enabled: false
+
+    postgresql:
+      enabled: true
+      auth:
+        enablePostgresUser: true
+        postgresPassword: ""
+        username: mailu
+        password: ""
+        database: mailu
+        existingSecret: "mail-secret"
+        secretKeys:
+          adminPasswordKey: postgres-password
+          userPasswordKey: password
+          replicationPasswordKey: replication-password
+      primary:
+        persistence:
+          enabled: true
+          existingClaim: "mailu-postgres-claim"
+
+    persistence:
+      single_pvc: false
+
+    ingress:
+      enabled: true
+      ingressClassName: "traefik"
+      pathType: ImplementationSpecific
+      apiVersion: ""
+      path: /
+      annotations:
+        cert-manager.io/cluster-issuer: letsencrypt-prod
+        traefik.ingress.kubernetes.io/router.entrypoints: websecure
+        traefik.ingress.kubernetes.io/request-body-size: "0"
+      tls: true
+      extraTls:
+        - hosts:
+            - mail.eagle.com.ru
+          secretName: mailu-tls
+
+    front:
+      hostPort:
+        enabled: false
+      externalService:
+        enabled: true
+        type: LoadBalancer
+        externalTrafficPolicy: Local
+        externalIPs: []
+        annotations: {}
+        labels: {}
+        ports:
+          pop3: false
+          pop3s: true
+          imap: false
+          imaps: true
+          smtp: true
+          smtps: true
+          submission: false
+          manageSieve: true
+        nodePorts:
+          pop3: 110
+          pop3s: 995
+          imap: 143
+          imaps: 993
+          smtp: 25
+          smtps: 465
+          submission: 587
+          manageSieve: 4190
+      service:
+        annotations:
+          traefik.ingress.kubernetes.io/service.serverstransport: default-mailu-web@kubernetescrd
+
+    admin:
+      enabled: true
+      uri: /admin
+      persistence:
+        existingClaim: "mailu-admin-claim"
+
+    redis:
+      enabled: true
+      master:
+        enabled: true
+        count: 1
+        persistence:
+          enabled: true
+          existingClaim: "mailu-redis-claim"
+          subPath: ""
+
+    postfix:
+      persistence:
+        existingClaim: "mailu-postfix-claim"
+
+    dovecot:
+      enabled: true
+      persistence:
+        existingClaim: "mailu-dovecot-claim"
+
+    rspamd:
+      enabled: true
+      overrides: {}
+      antivirusAction: "discard"
+      persistence:
+        existingClaim: "mailu-rspamd-claim"
+
+    clamav:
+      enabled: false
+      persistence:
+        enabled: true
+        existingClaim: "mailu-clamav-claim"
+
+    webmail:
+      enabled: true
+      uri: /webmail
+      type: roundcube
+      roundcubePlugins:
+        - archive
+        - zipdownload
+        - markasjunk
+        - managesieve
+        - enigma
+        - carddav
+        - mailu
+      persistence:
+        existingClaim: "mailu-webmail-claim"
+
+    webdav:
+      enabled: false
+
+    fetchmail:
+      enabled: false
+
+    oletools:
+      enabled: false
+
+    tika:
+      enabled: false
