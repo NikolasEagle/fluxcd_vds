@@ -15,7 +15,227 @@ spec:
         name: prometheus-community-helm-repo
         namespace: flux-system
       interval: 1m
-  valuesFrom:
-    - kind: ConfigMap
-      name: prometheus-config
-      valuesKey: values.yaml
+  values:
+    server:
+      persistentVolume:
+        enabled: true
+        accessModes:
+          - ReadWriteMany
+        existingClaim: "prometheus-data-claim"
+        size: 10Gi
+        retention: "15d"
+        retentionSize: "10GB"
+      alertmanagers:
+        - static_configs:
+            - targets:
+                - "alertmanager.default.svc.cluster.local:9093"
+          scheme: http
+          timeout: 10s
+          api_version: v2
+
+    scrapeConfigs:
+      prometheus:
+        enabled: true
+      kubernetes-api-servers:
+        enabled: true
+      kubernetes-nodes:
+        enabled: false
+      kubernetes-nodes-cadvisor:
+        enabled: true
+      kubernetes-service-endpoints:
+        enabled: true
+      kubernetes-service-endpoints-slow:
+        enabled: false
+      prometheus-pushgateway:
+        enabled: false
+      kubernetes-services:
+        enabled: true
+      kubernetes-pods:
+        enabled: true
+      kubernetes-pods-slow:
+        enabled: false
+
+    serverFiles:
+      alerting_rules.yml:
+        groups:
+          - name: infrastructure
+            interval: 30s
+            rules:
+              - alert: ServerDown
+                expr: up == 0
+                for: 1m
+                labels:
+                  severity: critical
+                  component: infrastructure
+                annotations:
+                  summary: "Server {{ $labels.instance }} is DOWN"
+                  description: "{{ $labels.instance }} of job {{ $labels.job }} has been down for more than 1 minute."
+                  impact: "Service unavailable, immediate action required"
+
+              - alert: HighCPUUsage
+                expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 85
+                for: 5m
+                labels:
+                  severity: warning
+                  component: compute
+                annotations:
+                  summary: "High CPU usage on {{ $labels.instance }}"
+                  description: 'CPU usage is {{ $value | printf "%.2f" }}% on {{ $labels.instance }}'
+                  recommendation: "Consider scaling up or optimizing application"
+
+              - alert: CriticalCPUUsage
+                expr: (100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)) > 95
+                for: 2m
+                labels:
+                  severity: critical
+                  component: compute
+                annotations:
+                  summary: "CRITICAL CPU usage on {{ $labels.instance }}"
+                  description: 'CPU usage is {{ $value | printf "%.2f" }}% on {{ $labels.instance }}'
+                  action: "Immediate investigation required"
+
+              - alert: HighMemoryUsage
+                expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+                for: 5m
+                labels:
+                  severity: warning
+                  component: memory
+                annotations:
+                  summary: "High memory usage on {{ $labels.instance }}"
+                  description: 'Memory usage is {{ $value | printf "%.2f" }}% on node {{ $labels.instance }}'
+
+              - alert: CriticalMemoryUsage
+                expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 95
+                for: 2m
+                labels:
+                  severity: critical
+                  component: memory
+                annotations:
+                  summary: "CRITICAL memory usage on {{ $labels.instance }}"
+                  description: 'Memory usage is {{ $value | printf "%.2f" }}% on {{ $labels.instance }}'
+
+              - alert: HighDiskUsage
+                expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 85
+                for: 5m
+                labels:
+                  severity: warning
+                  component: storage
+                annotations:
+                  summary: "High disk usage on {{ $labels.instance }}"
+                  description: 'Disk usage is {{ $value | printf "%.2f" }}% on {{ $labels.instance }} ({{ $labels.mountpoint }})'
+
+              - alert: CriticalDiskUsage
+                expr: (1 - (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"})) * 100 > 95
+                for: 1m
+                labels:
+                  severity: critical
+                  component: storage
+                annotations:
+                  summary: "CRITICAL disk usage on {{ $labels.instance }}"
+                  description: 'Disk usage is {{ $value | printf "%.2f" }}% on {{ $labels.instance }} - immediate cleanup required'
+
+          - name: network
+            interval: 30s
+            rules:
+              - alert: HighNetworkReceive
+                expr: rate(node_network_receive_bytes_total[5m]) > 100000000
+                for: 10m
+                labels:
+                  severity: info
+                  component: network
+                annotations:
+                  summary: "High network receive rate on {{ $labels.instance }}"
+                  description: "Network receive rate is {{ $value | humanize }}B/s on {{ $labels.device }}"
+
+          - name: services
+            interval: 30s
+            rules:
+              - alert: AlertmanagerDown
+                expr: alertmanager_up{job="alertmanager"} == 0
+                for: 2m
+                labels:
+                  severity: critical
+                  component: monitoring
+                annotations:
+                  summary: "Alertmanager is down"
+                  description: "Alertmanager instance {{ $labels.instance }} is not responding"
+
+              - alert: PrometheusTargetMissing
+                expr: up == 0
+                for: 5m
+                labels:
+                  severity: warning
+                  component: monitoring
+                annotations:
+                  summary: "Prometheus target missing"
+                  description: "Target {{ $labels.instance }} ({{ $labels.job }}) is down"
+
+          - name: kubernetes
+            interval: 30s
+            rules:
+              - alert: KubernetesNodeNotReady
+                expr: kube_node_status_condition{condition="Ready",status="true"} == 0
+                for: 5m
+                labels:
+                  severity: critical
+                  component: kubernetes
+                annotations:
+                  summary: "Kubernetes node {{ $labels.node }} is not ready"
+                  description: "Node {{ $labels.node }} has been not ready for 5 minutes"
+
+              - alert: KubernetesMemoryPressure
+                expr: kube_node_status_condition{condition="MemoryPressure",status="true"} == 1
+                for: 2m
+                labels:
+                  severity: warning
+                  component: kubernetes
+                annotations:
+                  summary: "Memory pressure on node {{ $labels.node }}"
+                  description: "Node {{ $labels.node }} is experiencing memory pressure"
+
+              - alert: KubernetesDiskPressure
+                expr: kube_node_status_condition{condition="DiskPressure",status="true"} == 1
+                for: 2m
+                labels:
+                  severity: warning
+                  component: kubernetes
+                annotations:
+                  summary: "Disk pressure on node {{ $labels.node }}"
+                  description: "Node {{ $labels.node }} is experiencing disk pressure"
+
+      recording_rules.yml:
+        groups:
+          - name: aggregated_metrics
+            interval: 30s
+            rules:
+              - record: node:cpu_usage:rate5m
+                expr: 100 - (avg by (instance) (rate(node_cpu_seconds_total{mode="idle"}[5m])) * 100)
+
+              - record: node:memory_usage:percentage
+                expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100
+
+              - record: cluster:cpu_usage:avg
+                expr: avg(node:cpu_usage:rate5m)
+
+      prometheus.yml:
+        rule_files:
+          - /etc/config/recording_rules.yml
+          - /etc/config/alerting_rules.yml
+          - /etc/config/rules
+          - /etc/config/alerts
+
+      alerts: {}
+
+      rules: {}
+
+    alertmanager:
+      enabled: false
+
+    kube-state-metrics:
+      enabled: true
+
+    prometheus-node-exporter:
+      enabled: true
+
+    prometheus-pushgateway:
+      enabled: false
