@@ -79,7 +79,7 @@ spec:
         whenScaled: Delete
         whenDeleted: Delete
         enableStatefulSetAutoDeletePVC: false
-        enableStatefulSetRecreationForSizeChange: false
+        enableStatefulSetRecreationForSizeChange: true
         enabled: true
         accessModes:
           - ReadWriteMany
