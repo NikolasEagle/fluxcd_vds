@@ -76,13 +76,13 @@ spec:
     singleBinary:
       replicas: 1
       persistence:
-        whenScaled: Delete
-        whenDeleted: Delete
+        whenScaled: Retain
+        whenDeleted: Retain
         enableStatefulSetAutoDeletePVC: false
         enableStatefulSetRecreationForSizeChange: true
         enabled: true
         accessModes:
-          - ReadWriteOnce
+          - ReadWriteMany
         size: 20Gi
 
     write:
