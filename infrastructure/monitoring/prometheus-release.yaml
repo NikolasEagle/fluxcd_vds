@@ -95,7 +95,7 @@ spec:
                   action: "Immediate investigation required"
 
               - alert: HighMemoryUsage
-                expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+                expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 87
                 for: 5m
                 labels:
                   severity: warning
