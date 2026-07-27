@@ -17,6 +17,9 @@ spec:
   values:
     replicaCount: 1
 
+    image:
+      pullPolicy: Always
+
     web:
       enabled: true
       type: ClusterIP
