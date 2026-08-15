@@ -31,9 +31,9 @@ spec:
     config:
       enabled: true
       global:
-        smtp_smarthost: "mail.eagle.com.ru:465"
-        smtp_from: "alertmanager@eagle.com.ru"
-        smtp_auth_username: "alertmanager@eagle.com.ru"
+        smtp_smarthost: "smtp.timeweb.ru:465"
+        smtp_from: "alertmanager@cats.com.ru"
+        smtp_auth_username: "alertmanager@cats.com.ru"
         smtp_auth_password_file: /etc/secrets/smtp-password
         smtp_require_tls: true
         resolve_timeout: 5m
