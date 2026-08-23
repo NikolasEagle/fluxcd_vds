@@ -4,7 +4,7 @@ metadata:
   name: alertmanager
   namespace: default
 spec:
-  suspend: false
+  suspend: true
   interval: 10m
   chart:
     spec:
