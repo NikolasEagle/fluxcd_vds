@@ -4,6 +4,7 @@ metadata:
   name: mousebook
   namespace: default
 spec:
+  suspend: true
   interval: 5m
   chart:
     spec:
@@ -28,13 +29,13 @@ spec:
         traefik.ingress.kubernetes.io/request-body-size: "0"
       tls:
         - hosts:
-          - mousebook.eagle.com.ru
+            - mousebook.eagle.com.ru
           secretName: mousebook-tls
       hosts:
-      - host: mousebook.eagle.com.ru
-        paths:
-        - path: /
-          pathType: Prefix
+        - host: mousebook.eagle.com.ru
+          paths:
+            - path: /
+              pathType: Prefix
 
     frontend:
       enabled: true
