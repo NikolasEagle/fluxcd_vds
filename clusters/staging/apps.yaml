@@ -7,7 +7,6 @@ spec:
   interval: 10m
   dependsOn:
     - name: repositories
-    - name: proxy
   sourceRef:
     kind: GitRepository
     name: flux-system
