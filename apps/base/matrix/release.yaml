@@ -109,17 +109,6 @@ spec:
           traefik.ingress.kubernetes.io/proxy-body-size: "0"
         className: "traefik"
         tlsEnabled: true
-      extraEnv:
-        - name: HTTP_PROXY
-          value: "http://cat-proxy-http-service.default.svc.cluster.local:8118"
-        - name: HTTPS_PROXY
-          value: "http://cat-proxy-http-service.default.svc.cluster.local:8118"
-        - name: http_proxy
-          value: "http://cat-proxy-http-service.default.svc.cluster.local:8118"
-        - name: https_proxy
-          value: "http://cat-proxy-http-service.default.svc.cluster.local:8118"
-        - name: no_proxy
-          value: "localhost,127.0.0.1,.local,.svc,.cluster.local"
 
     wellKnownDelegation:
       enabled: true
