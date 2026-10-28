@@ -2,12 +2,5 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   - cert-manager.yaml
-  - flask-app.yaml
   - matrix.yaml
-  - vless.yaml
-  - moviecat.yaml
-  - mousebook.yaml
-  - mailu.yaml
-  - prometheus-community.yaml
-  - grafana.yaml
   - cat-proxy.yaml
