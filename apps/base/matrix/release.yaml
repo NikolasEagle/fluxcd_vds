@@ -34,7 +34,7 @@ spec:
     clusterDomain: "cluster.local"
 
     matrixRTC:
-      enabled: false
+      enabled: true
       image:
         registry: ghcr.io
         repository: element-hq/lk-jwt-service
@@ -47,7 +47,7 @@ spec:
         tlsEnabled: true
 
     elementAdmin:
-      enabled: false
+      enabled: true
       replicas: 1
       image:
         registry: oci.element.io
@@ -75,7 +75,7 @@ spec:
         tlsEnabled: true
 
     matrixAuthenticationService:
-      enabled: false
+      enabled: true
       image:
         registry: ghcr.io
         repository: element-hq/matrix-authentication-service
@@ -93,7 +93,7 @@ spec:
         existingClaim: "matrix-postgres-data"
 
     synapse:
-      enabled: false
+      enabled: true
       media:
         storage:
           existingClaim: "matrix-media-claim"
